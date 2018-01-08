@@ -8,7 +8,29 @@ import (
 	"github.com/afex/hystrix-go/hystrix"
 )
 
+
 func main() {
+	hystrix.ConfigureCommand("my_command", hystrix.CommandConfig{
+		// How long to wait for command to complete, in milliseconds
+		Timeout: 50000,
+
+		// MaxConcurrent is how many commands of the same type
+		// can run at the same time
+		MaxConcurrentRequests: 300,
+
+		// VolumeThreshold is the minimum number of requests
+		// needed before a circuit can be tripped due to health
+		RequestVolumeThreshold: 10,
+
+		// SleepWindow is how long, in milliseconds,
+		// to wait after a circuit opens before testing for recovery
+		SleepWindow: 1000,
+
+		// ErrorPercentThreshold causes circuits to open once
+		// the rolling measure of errors exceeds this percent of requests
+		ErrorPercentThreshold: 50,
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -32,6 +54,7 @@ func main() {
 
 			return nil
 		}, nil)
+
 
 		// Block until we have a result or an error.
 		select {
